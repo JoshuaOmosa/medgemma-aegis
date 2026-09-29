@@ -1,0 +1,14 @@
+# Install PyTorch first for your platform: https://pytorch.org/get-started/locally/
+# Version floors are conservative; pin exact versions once you have a working setup.
+streamlit>=1.40
+sounddevice
+scipy
+numpy
+openai-whisper
+torch
+transformers>=4.50
+accelerate
+psutil
+tqdm
+# 4-bit quantisation (NVIDIA GPUs). Not available on macOS; CPU-only machines don't need it.
+bitsandbytes; platform_system != "Darwin"
