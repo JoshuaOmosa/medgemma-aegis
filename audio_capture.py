@@ -1,38 +1,59 @@
-import sounddevice as sd
-from scipy.io.wavfile import write
+"""Microphone recording for AegisScribe.
+
+Recordings are saved locally as 16-bit mono WAV files, named by timestamp
+(e.g. data/consultation_20260929_143015.wav) so one consultation never
+overwrites another. Call delete_recording() once you no longer need the audio.
+"""
 import os
-import time
+from datetime import datetime
 
-def record_consultation(duration=10, fs=44100):
-    print(f"--- Phase 2: Secure Local Recording ---")
-    
-    # 1. Check for Microphone
+DATA_DIR = "data"
+
+
+class RecordingError(RuntimeError):
+    """Raised when audio cannot be captured (no microphone, permission denied...)."""
+
+
+def record_consultation(duration=10, fs=44100, data_dir=DATA_DIR):
+    """Record `duration` seconds from the default microphone.
+
+    Returns the path of the saved WAV file. Raises RecordingError on failure.
+    """
     try:
-        # We start the recording buffer
-        print(f"🎤 [RECORDING] {duration} seconds remaining...")
-        recording = sd.rec(int(duration * fs), samplerate=fs, channels=1)
-        
-        # 2. Visual Feedback (Countdown)
-        for i in range(duration, 0, -1):
-            print(f"Time left: {i}s", end="\r")
-            time.sleep(1)
-            
-        sd.wait()  # Ensure recording buffer is full
-        
-        # 3. Secure Local Storage
-        save_path = "data/raw_consultation.wav"
-        os.makedirs("data", exist_ok=True)
-        
-        # Write the file
-        write(save_path, fs, recording) 
-        
-        print(f"\n✅ Recording saved safely to: {save_path}")
-        return save_path
+        # Imported here so the app still starts on machines without PortAudio.
+        import numpy as np
+        import sounddevice as sd
+        from scipy.io.wavfile import write
+    except (ImportError, OSError) as exc:
+        raise RecordingError(f"Audio libraries are not available: {exc}") from exc
 
-    except Exception as e:
-        print(f"\n❌ Hardware Error: Could not access microphone. {e}")
-        return None
+    try:
+        sd.check_input_settings(samplerate=fs, channels=1)
+        recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype="float32")
+        sd.wait()  # block until the buffer is full
+    except Exception as exc:  # noqa: BLE001 - sounddevice raises many error types
+        raise RecordingError(f"Could not access the microphone: {exc}") from exc
+
+    # float32 WAVs do not play in every browser; 16-bit PCM works everywhere.
+    pcm = (np.clip(recording, -1.0, 1.0) * 32767).astype(np.int16)
+
+    os.makedirs(data_dir, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    save_path = os.path.join(data_dir, f"consultation_{stamp}.wav")
+    write(save_path, fs, pcm)
+    return save_path
+
+
+def delete_recording(path):
+    """Delete a recording. Returns True if a file was removed."""
+    try:
+        os.remove(path)
+        return True
+    except (FileNotFoundError, TypeError, OSError):
+        return False
+
 
 if __name__ == "__main__":
-    # Test a 5-second clip to verify it works
-    record_consultation(duration=5)
+    # Quick hardware test: records 5 seconds.
+    print("Recording 5 seconds...")
+    print("Saved:", record_consultation(duration=5))
