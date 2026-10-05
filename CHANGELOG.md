@@ -28,4 +28,6 @@
 
 ### Moved
 - `core/` -> `legacy/core/` (unused early drafts).
-- `Models/`, `Http/`, `Providers/` -> `unrelated/laravel-queue-system/` (a separate PHP project).
+
+### Removed
+- `Models/`, `Http/`, `Providers/`: Laravel files from an unrelated PHP project that had been committed here by mistake.

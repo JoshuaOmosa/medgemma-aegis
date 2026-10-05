@@ -191,7 +191,6 @@ flowchart TB
 
     subgraph OLD["📁 Archived, not used"]
         L1["legacy/core/<br/>early drafts"]
-        L2["unrelated/laravel-queue-system/<br/>separate PHP project"]
     end
 
     ROOT --> APP
@@ -218,12 +217,8 @@ medgemma-aegis/
 ├── requirements.txt       # Runtime dependencies
 ├── requirements-dev.txt   # Test dependencies (pytest, optional)
 ├── tests/                 # Unit tests
-├── legacy/core/           # Early Whisper-only and distilgpt2 drafts (archived)
-└── unrelated/
-    └── laravel-queue-system/   # A separate Laravel/PHP project that was mixed into this repo
+└── legacy/core/           # Early Whisper-only and distilgpt2 drafts (archived)
 ```
-
-> **About `unrelated/laravel-queue-system/`:** these PHP files (queue tickets, officer dashboard, Laravel auth) have nothing to do with AegisScribe and can't run alone, because their routes, views and migrations are missing. They were moved here, not deleted. Consider giving them their own repository.
 
 ---
 
